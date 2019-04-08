@@ -1,0 +1,91 @@
+#include <kipr/botball.h>
+#define TRUE 1
+#define FALSE 0
+ 
+#define camera_channel_card 1
+#define camera_channel_spot 0
+#define camera_area 20
+#define camera_dither 15
+#define camera_right 70
+#define camera_left 90
+
+int see_fire();
+
+int main()
+{
+    
+    int update;
+    int card_count;
+    int spot_count;
+    camera_open_black();
+    update = camera_update();
+    printf("camera update = %3d\n", update);
+    
+    card_count = get_object_count(1);
+    spot_count = get_object_count(0);
+	printf("Test fire, card count %3d, spot count %3d\n", 
+           card_count, spot_count);
+	//printf("result see_fire = %d\n", see_fire());  
+    camera_close();
+    return 0;
+}
+int see_fire(){
+    int can_see_fire;
+    int x_card;
+    int y_card;
+    int area_card;
+    int x_spot;
+    int y_spot;
+    int area_spot; 
+    int spot_count;
+    int k;
+    
+	int update_errors = 0;
+	camera_open_black();
+	while (!camera_update()){
+        update_errors++;
+        msleep(10);
+    }
+    printf("update errors = %3d\n", update_errors);
+    can_see_fire = FALSE;
+    if((get_object_count(camera_channel_spot) != 0) && (get_object_count(camera_channel_card) != 0)){ //object may be in view
+		printf("May be fire, card count %3d, spot count %3d\n", get_object_count(camera_channel_card), get_object_count(camera_channel_spot));
+        x_card = get_object_center_x(camera_channel_card, 0);
+		y_card = get_object_center_y(camera_channel_card, 0);
+		area_card = get_object_area(camera_channel_card, 0);
+        printf("%3d, %3d, %3d\n", x_card, y_card, area_card);
+        
+        spot_count = get_object_count(camera_channel_spot);
+        
+        x_spot = get_object_center_x(camera_channel_spot, 0);
+        y_spot = get_object_center_y(camera_channel_spot, 0);
+        area_spot = get_object_area(camera_channel_spot, 0);
+        
+        k = 0;
+        can_see_fire = FALSE;
+        while((k < (spot_count - 1)) 
+              && ((abs(x_spot - x_card) > camera_dither) 
+              || (abs(y_spot - y_card) > camera_dither)
+              || (area_card <= area_spot)
+              || (area_card < camera_area)))
+        {
+            k++;
+			x_spot = get_object_center_x(camera_channel_spot, k);
+			y_spot = get_object_center_y(camera_channel_spot, k);
+			area_spot = get_object_area(camera_channel_spot, k);
+        	//printf("%3d, %3d, %3d\n", x_spot, y_spot, area_spot);
+            
+        }
+        if(k < (spot_count - 1)){
+            can_see_fire = TRUE;
+        }
+        printf("%3d, %3d, %3d\n", x_spot, y_spot, area_spot);
+        printf("spot count = %3d, k = %3d\n", spot_count, k);
+    }
+    else{
+        printf("no card %3d or no spot %3d\n",get_object_count(camera_channel_card) ,get_object_count(camera_channel_spot));
+    }
+
+	camera_close();
+	return can_see_fire;
+}
