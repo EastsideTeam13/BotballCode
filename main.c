@@ -15,7 +15,15 @@ void spider_sense();
 
 int main()
 {
-    
+    /*
+    straight(dist1, full_speed); //exit starting box
+    turn_right(); //turn right toward utility area
+    stop_at_line(full_speed); //drive to utility area
+    turn_left(); //turn left toward center line
+    stop_at_line(full_speed); //drive to center line
+    turn_left(); //turn left onto line
+    */
+
     int position; int sensor; int logic;
     clear_motor_position_counter(r_motor);
     logic = 0;
